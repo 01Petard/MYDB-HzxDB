@@ -98,6 +98,25 @@ public class Executor {
                 res = tbm.delete(xid, (Delete) stat);
             } else if (stat instanceof Update) {
                 res = tbm.update(xid, (Update) stat);
+            } else if (stat instanceof Help) {
+                res = ("*******************************************************************************************\n"
+                        + "Here are some commands you can use:\n"
+                        + "\n"
+                        + "   CREATE TABLE <table_name> <column_name> <type>, ... (<index_name column_name>)\n"
+                        + "   DROP TABLE <table_name>\n"
+                        + "   SHOW TABLES\n"
+                        + "   SELECT * FROM <table_name>\n"
+                        + "   INSERT INTO <table_name> VALUES (<value>, ...)\n"
+                        + "   DELETE FROM <table_name> WHERE <condition>\n"
+                        + "   UPDATE <table_name> SET <column_name> = <value> WHERE <condition>\n"
+                        + "   HELP\n"
+                        + "   EXIT\n"
+                        + "\n"
+                        + "*******************************************************************************************\n"
+                        + "And, Zexiao Huang is the author of this database system.\n"
+                        + "Have fun using it! :)\n"
+                ).getBytes();
+
             }
             return res;
         } catch (Exception e1) {

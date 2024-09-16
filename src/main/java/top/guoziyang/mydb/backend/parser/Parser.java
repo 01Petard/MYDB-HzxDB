@@ -46,6 +46,9 @@ public class Parser {
                 case "show":
                     stat = parseShow(tokenizer);
                     break;
+                case "help":
+                    stat = parseHelp(tokenizer);
+                    break;
                 default:
                     throw Error.InvalidCommandException;
             }
@@ -73,9 +76,17 @@ public class Parser {
     }
 
     private static Show parseShow(Tokenizer tokenizer) throws Exception {
-        String tmp = tokenizer.peek();
-        if ("".equals(tmp)) {
+        tokenizer.pop();
+        if ("tables".equals(tokenizer.peek())) {
+            tokenizer.pop();
             return new Show();
+        }
+        throw Error.InvalidCommandException;
+    }
+
+    private static Help parseHelp(Tokenizer tokenizer) throws Exception {
+        if ("".equals(tokenizer.peek())) {
+            return new Help();
         }
         throw Error.InvalidCommandException;
     }

@@ -6,13 +6,7 @@ import com.google.gson.Gson;
 
 import org.junit.Test;
 
-import top.guoziyang.mydb.backend.parser.statement.Begin;
-import top.guoziyang.mydb.backend.parser.statement.Create;
-import top.guoziyang.mydb.backend.parser.statement.Delete;
-import top.guoziyang.mydb.backend.parser.statement.Insert;
-import top.guoziyang.mydb.backend.parser.statement.Select;
-import top.guoziyang.mydb.backend.parser.statement.Show;
-import top.guoziyang.mydb.backend.parser.statement.Update;
+import top.guoziyang.mydb.backend.parser.statement.*;
 
 public class ParserTest {
     @Test
@@ -84,11 +78,11 @@ public class ParserTest {
 
     @Test
     public void testShow() throws Exception {
-        String stat = "show";
+        String stat = "show tables";
         Object res = Parser.Parse(stat.getBytes());
         Show show = (Show)res;
         Gson gson = new Gson();
-        System.out.println("Show");
+        System.out.println("Show Tables");
         System.out.println(gson.toJson(show));
         System.out.println("======================");
     }
@@ -101,6 +95,17 @@ public class ParserTest {
         Gson gson = new Gson();
         System.out.println("Update");
         System.out.println(gson.toJson(update));
+        System.out.println("======================");
+    }
+
+    @Test
+    public void testHelp() throws Exception {
+        String stat = "help";
+        Object res = Parser.Parse(stat.getBytes());
+        Help help = (Help) res;
+        Gson gson = new Gson();
+        System.out.println("help");
+        System.out.println(gson.toJson(help));
         System.out.println("======================");
     }
 }
