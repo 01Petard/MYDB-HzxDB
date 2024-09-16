@@ -1,5 +1,8 @@
 package top.guoziyang.mydb.backend.dm.page;
 
+/**
+ * 定义了数据页的操作
+ */
 public interface Page {
     void lock();
     void unlock();
