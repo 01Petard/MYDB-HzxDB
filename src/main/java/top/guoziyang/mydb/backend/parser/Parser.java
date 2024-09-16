@@ -1,32 +1,21 @@
 package top.guoziyang.mydb.backend.parser;
 
+import top.guoziyang.mydb.backend.parser.statement.*;
+import top.guoziyang.mydb.common.Error;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import top.guoziyang.mydb.backend.parser.statement.Abort;
-import top.guoziyang.mydb.backend.parser.statement.Begin;
-import top.guoziyang.mydb.backend.parser.statement.Commit;
-import top.guoziyang.mydb.backend.parser.statement.Create;
-import top.guoziyang.mydb.backend.parser.statement.Delete;
-import top.guoziyang.mydb.backend.parser.statement.Drop;
-import top.guoziyang.mydb.backend.parser.statement.Insert;
-import top.guoziyang.mydb.backend.parser.statement.Select;
-import top.guoziyang.mydb.backend.parser.statement.Show;
-import top.guoziyang.mydb.backend.parser.statement.SingleExpression;
-import top.guoziyang.mydb.backend.parser.statement.Update;
-import top.guoziyang.mydb.backend.parser.statement.Where;
-import top.guoziyang.mydb.common.Error;
-
 public class Parser {
     public static Object Parse(byte[] statement) throws Exception {
+        // 解析sql语句
         Tokenizer tokenizer = new Tokenizer(statement);
         String token = tokenizer.peek();
         tokenizer.pop();
-
         Object stat = null;
         Exception statErr = null;
         try {
-            switch(token) {
+            switch (token) {
                 case "begin":
                     stat = parseBegin(tokenizer);
                     break;
@@ -60,21 +49,24 @@ public class Parser {
                 default:
                     throw Error.InvalidCommandException;
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             statErr = e;
         }
+
+
         try {
+            // 检查是否还有未解析的token，如果有会报错
             String next = tokenizer.peek();
-            if(!"".equals(next)) {
+            if (!"".equals(next)) {
                 byte[] errStat = tokenizer.errStat();
                 statErr = new RuntimeException("Invalid statement: " + new String(errStat));
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             byte[] errStat = tokenizer.errStat();
             statErr = new RuntimeException("Invalid statement: " + new String(errStat));
         }
-        if(statErr != null) {
+        if (statErr != null) {
             throw statErr;
         }
         return stat;
@@ -82,7 +74,7 @@ public class Parser {
 
     private static Show parseShow(Tokenizer tokenizer) throws Exception {
         String tmp = tokenizer.peek();
-        if("".equals(tmp)) {
+        if ("".equals(tmp)) {
             return new Show();
         }
         throw Error.InvalidCommandException;
@@ -91,26 +83,27 @@ public class Parser {
     private static Update parseUpdate(Tokenizer tokenizer) throws Exception {
         Update update = new Update();
         update.tableName = tokenizer.peek();
-        tokenizer.pop();
 
-        if(!"set".equals(tokenizer.peek())) {
+        // 修改的列名
+        tokenizer.pop();
+        if (!"set".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
-        tokenizer.pop();
 
+        // 列修改后的值
+        tokenizer.pop();
         update.fieldName = tokenizer.peek();
         tokenizer.pop();
-
-        if(!"=".equals(tokenizer.peek())) {
+        if (!"=".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
         tokenizer.pop();
-
         update.value = tokenizer.peek();
         tokenizer.pop();
 
+        // where子句
         String tmp = tokenizer.peek();
-        if("".equals(tmp)) {
+        if ("".equals(tmp)) {
             update.where = null;
             return update;
         }
@@ -122,18 +115,20 @@ public class Parser {
     private static Delete parseDelete(Tokenizer tokenizer) throws Exception {
         Delete delete = new Delete();
 
-        if(!"from".equals(tokenizer.peek())) {
+        if (!"from".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
-        tokenizer.pop();
 
+        // 表名
+        tokenizer.pop();
         String tableName = tokenizer.peek();
-        if(!isName(tableName)) {
+        if (!isName(tableName)) {
             throw Error.InvalidCommandException;
         }
         delete.tableName = tableName;
-        tokenizer.pop();
 
+        // where子句
+        tokenizer.pop();
         delete.where = parseWhere(tokenizer);
         return delete;
     }
@@ -141,110 +136,114 @@ public class Parser {
     private static Insert parseInsert(Tokenizer tokenizer) throws Exception {
         Insert insert = new Insert();
 
-        if(!"into".equals(tokenizer.peek())) {
+        if (!"into".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
-        tokenizer.pop();
 
+        //表名
+        tokenizer.pop();
         String tableName = tokenizer.peek();
-        if(!isName(tableName)) {
+        if (!isName(tableName)) {
             throw Error.InvalidCommandException;
         }
         insert.tableName = tableName;
-        tokenizer.pop();
 
-        if(!"values".equals(tokenizer.peek())) {
+        // 列名
+        tokenizer.pop();
+        if (!"values".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
-
         List<String> values = new ArrayList<>();
-        while(true) {
+        while (true) {
             tokenizer.pop();
             String value = tokenizer.peek();
-            if("".equals(value)) {
-                break;
-            } else {
+            if (!"".equals(value)) {
                 values.add(value);
+            } else {
+                break;
             }
         }
-        insert.values = values.toArray(new String[values.size()]);
+        insert.values = values.toArray(new String[0]);
 
         return insert;
     }
 
     private static Select parseSelect(Tokenizer tokenizer) throws Exception {
-        Select read = new Select();
+        Select select = new Select();
 
+        // 获取查询目标
         List<String> fields = new ArrayList<>();
         String asterisk = tokenizer.peek();
-        if("*".equals(asterisk)) {
+        if ("*".equals(asterisk)) {
             fields.add(asterisk);
             tokenizer.pop();
         } else {
-            while(true) {
+            while (true) {
                 String field = tokenizer.peek();
-                if(!isName(field)) {
+                if (!isName(field)) {
                     throw Error.InvalidCommandException;
                 }
                 fields.add(field);
                 tokenizer.pop();
-                if(",".equals(tokenizer.peek())) {
+                if (",".equals(tokenizer.peek())) {
                     tokenizer.pop();
                 } else {
                     break;
                 }
             }
         }
-        read.fields = fields.toArray(new String[fields.size()]);
+        select.fields = fields.toArray(new String[0]);
 
-        if(!"from".equals(tokenizer.peek())) {
+        // 校验 “from” 关键字
+        if (!"from".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
-        tokenizer.pop();
 
+        // 表名
+        tokenizer.pop();
         String tableName = tokenizer.peek();
-        if(!isName(tableName)) {
+        if (!isName(tableName)) {
             throw Error.InvalidCommandException;
         }
-        read.tableName = tableName;
+        select.tableName = tableName;
+
+        // where条件
         tokenizer.pop();
-
         String tmp = tokenizer.peek();
-        if("".equals(tmp)) {
-            read.where = null;
-            return read;
+        if ("".equals(tmp)) {
+            select.where = null;
+            return select;
         }
-
-        read.where = parseWhere(tokenizer);
-        return read;
+        select.where = parseWhere(tokenizer);
+        return select;
     }
 
     private static Where parseWhere(Tokenizer tokenizer) throws Exception {
         Where where = new Where();
 
-        if(!"where".equals(tokenizer.peek())) {
+        if (!"where".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
+
+        // 运算对象1
         tokenizer.pop();
+        where.singleExp1 = parseSingleExp(tokenizer);
 
-        SingleExpression exp1 = parseSingleExp(tokenizer);
-        where.singleExp1 = exp1;
-
+        // 逻辑运算符
         String logicOp = tokenizer.peek();
-        if("".equals(logicOp)) {
+        if ("".equals(logicOp)) {
             where.logicOp = logicOp;
             return where;
         }
-        if(!isLogicOp(logicOp)) {
+        if (!isLogicOp(logicOp)) {
             throw Error.InvalidCommandException;
         }
         where.logicOp = logicOp;
+
+        // 运算对象2
         tokenizer.pop();
-
-        SingleExpression exp2 = parseSingleExp(tokenizer);
-        where.singleExp2 = exp2;
-
-        if(!"".equals(tokenizer.peek())) {
+        where.singleExp2 = parseSingleExp(tokenizer);
+        if (!"".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
         return where;
@@ -252,16 +251,16 @@ public class Parser {
 
     private static SingleExpression parseSingleExp(Tokenizer tokenizer) throws Exception {
         SingleExpression exp = new SingleExpression();
-        
+
         String field = tokenizer.peek();
-        if(!isName(field)) {
+        if (!isName(field)) {
             throw Error.InvalidCommandException;
         }
         exp.field = field;
         tokenizer.pop();
 
         String op = tokenizer.peek();
-        if(!isCmpOp(op)) {
+        if (!isCmpOp(op)) {
             throw Error.InvalidCommandException;
         }
         exp.compareOp = op;
@@ -281,97 +280,101 @@ public class Parser {
     }
 
     private static Drop parseDrop(Tokenizer tokenizer) throws Exception {
-        if(!"table".equals(tokenizer.peek())) {
+        if (!"table".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
-        tokenizer.pop();
-
-        String tableName = tokenizer.peek();
-        if(!isName(tableName)) {
-            throw Error.InvalidCommandException;
-        }
-        tokenizer.pop();
-
-        if(!"".equals(tokenizer.peek())) {
-            throw Error.InvalidCommandException;
-        }
-        
         Drop drop = new Drop();
+
+        // 表名
+        tokenizer.pop();
+        String tableName = tokenizer.peek();
+        if (!isName(tableName)) {
+            throw Error.InvalidCommandException;
+        }
         drop.tableName = tableName;
+
+        // 命令结束检查
+        tokenizer.pop();
+        if (!"".equals(tokenizer.peek())) {
+            throw Error.InvalidCommandException;
+        }
         return drop;
     }
 
     private static Create parseCreate(Tokenizer tokenizer) throws Exception {
-        if(!"table".equals(tokenizer.peek())) {
+        if (!"table".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
+
+        // 表名
         tokenizer.pop();
-
         Create create = new Create();
-        String name = tokenizer.peek();
-        if(!isName(name)) {
+        String tableName = tokenizer.peek();
+        if (!isName(tableName)) {
             throw Error.InvalidCommandException;
         }
-        create.tableName = name;
+        create.tableName = tableName;
 
-        List<String> fNames = new ArrayList<>();
-        List<String> fTypes = new ArrayList<>();
-        while(true) {
+        // 字段信息
+        List<String> fieldNames = new ArrayList<>();
+        List<String> fieldTypes = new ArrayList<>();
+        while (true) {
             tokenizer.pop();
             String field = tokenizer.peek();
-            if("(".equals(field)) {
+            if ("(".equals(field)) {
                 break;
             }
 
-            if(!isName(field)) {
+            if (!isName(field)) {
                 throw Error.InvalidCommandException;
             }
 
             tokenizer.pop();
             String fieldType = tokenizer.peek();
-            if(!isType(fieldType)) {
+            if (!isType(fieldType)) {
                 throw Error.InvalidCommandException;
             }
-            fNames.add(field);
-            fTypes.add(fieldType);
+            fieldNames.add(field);
+            fieldTypes.add(fieldType);
             tokenizer.pop();
-            
+
             String next = tokenizer.peek();
-            if(",".equals(next)) {
+            if (",".equals(next)) {
                 continue;
-            } else if("".equals(next)) {
+            } else if ("".equals(next)) {
                 throw Error.TableNoIndexException;
-            } else if("(".equals(next)) {
+            } else if ("(".equals(next)) {
                 break;
             } else {
                 throw Error.InvalidCommandException;
             }
         }
-        create.fieldName = fNames.toArray(new String[fNames.size()]);
-        create.fieldType = fTypes.toArray(new String[fTypes.size()]);
+        create.fieldName = fieldNames.toArray(new String[0]);
+        create.fieldType = fieldTypes.toArray(new String[0]);
 
+        // 索引信息
         tokenizer.pop();
-        if(!"index".equals(tokenizer.peek())) {
+        if (!"index".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
-
         List<String> indexes = new ArrayList<>();
-        while(true) {
+        while (true) {
             tokenizer.pop();
             String field = tokenizer.peek();
-            if(")".equals(field)) {
+            if (")".equals(field)) {
                 break;
             }
-            if(!isName(field)) {
+            if (!isName(field)) {
                 throw Error.InvalidCommandException;
             } else {
                 indexes.add(field);
             }
         }
-        create.index = indexes.toArray(new String[indexes.size()]);
-        tokenizer.pop();
+        create.index = indexes.toArray(new String[0]);
 
-        if(!"".equals(tokenizer.peek())) {
+        // 建表结束，检查命令是否结束
+        tokenizer.pop();
+        if (!"".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
         return create;
@@ -379,18 +382,18 @@ public class Parser {
 
     private static boolean isType(String tp) {
         return ("int32".equals(tp) || "int64".equals(tp) ||
-        "string".equals(tp));
+                "string".equals(tp));
     }
 
     private static Abort parseAbort(Tokenizer tokenizer) throws Exception {
-        if(!"".equals(tokenizer.peek())) {
+        if (!"".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
         return new Abort();
     }
 
     private static Commit parseCommit(Tokenizer tokenizer) throws Exception {
-        if(!"".equals(tokenizer.peek())) {
+        if (!"".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
         return new Commit();
@@ -399,40 +402,40 @@ public class Parser {
     private static Begin parseBegin(Tokenizer tokenizer) throws Exception {
         String isolation = tokenizer.peek();
         Begin begin = new Begin();
-        if("".equals(isolation)) {
+        if ("".equals(isolation)) {
             return begin;
         }
-        if(!"isolation".equals(isolation)) {
+        if (!"isolation".equals(isolation)) {
             throw Error.InvalidCommandException;
         }
 
         tokenizer.pop();
         String level = tokenizer.peek();
-        if(!"level".equals(level)) {
+        if (!"level".equals(level)) {
             throw Error.InvalidCommandException;
         }
         tokenizer.pop();
 
         String tmp1 = tokenizer.peek();
-        if("read".equals(tmp1)) {
+        if ("read".equals(tmp1)) {
             tokenizer.pop();
             String tmp2 = tokenizer.peek();
-            if("committed".equals(tmp2)) {
+            if ("committed".equals(tmp2)) {
                 tokenizer.pop();
-                if(!"".equals(tokenizer.peek())) {
+                if (!"".equals(tokenizer.peek())) {
                     throw Error.InvalidCommandException;
                 }
                 return begin;
             } else {
                 throw Error.InvalidCommandException;
             }
-        } else if("repeatable".equals(tmp1)) {
+        } else if ("repeatable".equals(tmp1)) {
             tokenizer.pop();
             String tmp2 = tokenizer.peek();
-            if("read".equals(tmp2)) {
+            if ("read".equals(tmp2)) {
                 begin.isRepeatableRead = true;
                 tokenizer.pop();
-                if(!"".equals(tokenizer.peek())) {
+                if (!"".equals(tokenizer.peek())) {
                     throw Error.InvalidCommandException;
                 }
                 return begin;
