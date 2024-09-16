@@ -75,11 +75,12 @@ public class Parser {
         return stat;
     }
 
-    private static Show parseShow(Tokenizer tokenizer) throws Exception {
-        tokenizer.pop();
-        if ("tables".equals(tokenizer.peek())) {
-            tokenizer.pop();
+    private static Object parseShow(Tokenizer tokenizer) throws Exception {
+        if ("".equals(tokenizer.peek())) {
             return new Show();
+        } else if ("tables".equals(tokenizer.peek())) {
+            tokenizer.pop();
+            return new ShowTables();
         }
         throw Error.InvalidCommandException;
     }

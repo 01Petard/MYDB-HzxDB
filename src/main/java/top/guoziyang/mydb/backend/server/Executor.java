@@ -88,6 +88,8 @@ public class Executor {
             byte[] res = null;
             if (stat instanceof Show) {
                 res = tbm.show(xid);
+            } else if (stat instanceof ShowTables) {
+                res = tbm.showTables(xid);
             } else if (stat instanceof Create) {
                 res = tbm.create(xid, (Create) stat);
             } else if (stat instanceof Select) {

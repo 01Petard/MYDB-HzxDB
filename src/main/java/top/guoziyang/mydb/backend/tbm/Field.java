@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 表示字段信息
+ * 管理表和字段的结构数据，例如表名、表字段信息和字段索引等
  * 二进制格式为：
  * [FieldName][TypeName][IndexUid]
  * 如果field无索引，IndexUid为0

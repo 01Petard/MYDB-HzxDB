@@ -78,11 +78,11 @@ public class ParserTest {
 
     @Test
     public void testShow() throws Exception {
-        String stat = "show tables";
+        String stat = "show";
         Object res = Parser.Parse(stat.getBytes());
         Show show = (Show)res;
         Gson gson = new Gson();
-        System.out.println("Show Tables");
+        System.out.println("Show");
         System.out.println(gson.toJson(show));
         System.out.println("======================");
     }
@@ -95,6 +95,17 @@ public class ParserTest {
         Gson gson = new Gson();
         System.out.println("Update");
         System.out.println(gson.toJson(update));
+        System.out.println("======================");
+    }
+
+    @Test
+    public void testShowTable() throws Exception {
+        String stat = "show tables";
+        Object res = Parser.Parse(stat.getBytes());
+        ShowTables showTables = (ShowTables)res;
+        Gson gson = new Gson();
+        System.out.println("Show Tables");
+        System.out.println(gson.toJson(showTables));
         System.out.println("======================");
     }
 

@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * 直接被最外层 Server 调用，直接返回执行的结果
+ */
 public class TableManagerImpl implements TableManager {
     VersionManager vm;
     DataManager dm;
@@ -32,7 +35,7 @@ public class TableManagerImpl implements TableManager {
     }
 
     /**
-     * 启动时，
+     * 启动时
      */
     private void loadTables() {
         long uid = firstTableUid();
@@ -94,6 +97,24 @@ public class TableManagerImpl implements TableManager {
             lock.unlock();
         }
     }
+
+    @Override
+    public byte[] showTables(long xid) throws Exception {
+        lock.lock();
+        try {
+            StringBuilder sb = new StringBuilder();
+            if (tableCache.isEmpty()) {
+                return "No tables found.".getBytes(); // 如果没有表，返回提示信息
+            }
+            for (String tableName : tableCache.keySet()) {
+                sb.append(tableName).append("\n"); // 将每个表名追加到字符串
+            }
+            return sb.toString().getBytes(); // 返回字节数组
+        } finally {
+            lock.unlock();
+        }
+    }
+
 
     @Override
     public byte[] create(long xid, Create create) throws Exception {

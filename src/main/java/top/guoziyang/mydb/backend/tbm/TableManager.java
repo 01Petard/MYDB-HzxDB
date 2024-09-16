@@ -5,6 +5,9 @@ import top.guoziyang.mydb.backend.parser.statement.*;
 import top.guoziyang.mydb.backend.utils.Parser;
 import top.guoziyang.mydb.backend.vm.VersionManager;
 
+/**
+ * 表管理器接口
+ */
 public interface TableManager {
     /**
      * 创建一个新的表管理器实例
@@ -42,6 +45,9 @@ public interface TableManager {
 
     // 显示事务的状态
     byte[] show(long xid);
+
+    // 查看数据库中的所有表
+    byte[] showTables(long xid) throws Exception;
 
     // 创建一个新的表
     byte[] create(long xid, Create create) throws Exception;
