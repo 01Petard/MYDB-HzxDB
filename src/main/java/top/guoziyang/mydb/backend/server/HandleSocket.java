@@ -1,6 +1,7 @@
 package top.guoziyang.mydb.backend.server;
 
-import top.guoziyang.mydb.backend.tableManager.TableManager;
+
+import top.guoziyang.mydb.backend.tbm.TableManager;
 import top.guoziyang.mydb.transport.Encoder;
 import top.guoziyang.mydb.transport.Package;
 import top.guoziyang.mydb.transport.Packager;
