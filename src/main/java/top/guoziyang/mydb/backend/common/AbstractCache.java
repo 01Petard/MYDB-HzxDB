@@ -97,8 +97,7 @@ public abstract class AbstractCache<T> {
         try {
             int ref = references.get(key) - 1;
             if (ref == 0) {
-                T obj = cache.get(key);
-                releaseForCache(obj);
+                releaseForCache(cache.get(key));
                 references.remove(key);
                 cache.remove(key);
                 count--;
@@ -118,8 +117,7 @@ public abstract class AbstractCache<T> {
         try {
             Set<Long> keys = cache.keySet();
             for (long key : keys) {
-                T obj = cache.get(key);
-                releaseForCache(obj);
+                releaseForCache(cache.get(key));
                 references.remove(key);
                 cache.remove(key);
             }

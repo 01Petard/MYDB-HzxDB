@@ -104,7 +104,7 @@ public class DataManagerTest {
         CountDownLatch cdl = new CountDownLatch(1);
         initUids();
         Runnable r = () -> worker(dm0, mdm, tasksNum, 50, cdl);
-        new Thread(r).run();
+        new Thread(r).start();
         cdl.await();
         dm0.close(); mdm.close();
 
@@ -123,7 +123,7 @@ public class DataManagerTest {
         initUids();
         for(int i = 0; i < 10; i ++) {
             Runnable r = () -> worker(dm0, mdm, tasksNum, 50, cdl);
-            new Thread(r).run();
+            new Thread(r).start();
         }
         cdl.await();
         dm0.close(); mdm.close();
@@ -147,7 +147,7 @@ public class DataManagerTest {
             for(int k = 0; k < workerNums; k ++) {
                 final DataManager dm = dm0;
                 Runnable r = () -> worker(dm, mdm, 100, 50, cdl);
-                new Thread(r).run();
+                new Thread(r).start();
             }
             cdl.await();
         }
