@@ -63,31 +63,8 @@ public class Recover {
     public static void recover(TransactionManager tm, Logger lg, PageCache pc) {
         System.out.println("Recovering...");
 
-        /*
-        找到日志文件中最大的页号，并截断日志文件
-         */
-        // 截断日志文件
-        lg.rewind();
-        int maxPgno = 0;
-        while(true) {
-            byte[] log = lg.next();
-            if(log == null) break;
-            int pgno;
-            if(isInsertLog(log)) {
-                InsertLogInfo li = parseInsertLog(log);
-                pgno = li.pgno;
-            } else {
-                UpdateLogInfo li = parseUpdateLog(log);
-                pgno = li.pgno;
-            }
-            if(pgno > maxPgno) {
-                maxPgno = pgno;
-            }
-        }
-        if(maxPgno == 0) {
-            maxPgno = 1;
-        }
-        pc.truncateByBgno(maxPgno);
+        // 找到日志文件中最大的页号，并截断日志文件
+        int maxPgno = handleBadPaperCache(lg, pc);
         System.out.println("Truncate to " + maxPgno + " pages.");
 
         // 执行重做操作，回滚已完成的事务
@@ -101,6 +78,43 @@ public class Recover {
         System.out.println("Recovery Over.");
     }
 
+    /**
+     * 截断日志文件
+     * @param lg
+     * @param pc
+     * @return
+     */
+    private static int handleBadPaperCache(Logger lg, PageCache pc) {
+        // 重置日志文件指针到起始位置
+        lg.rewind();
+        // 初始化最大页号为0
+        int maxPgno = 0;
+        // 循环读取日志直到没有更多日志可读
+        while (true) {
+            byte[] log = lg.next();
+            if (log == null) break; // 如果没有更多的日志，退出循环
+            int pgno;
+            // 判断日志类型是插入还是更新
+            if (isInsertLog(log)) {
+                InsertLogInfo li = parseInsertLog(log);
+                pgno = li.pgno;
+            } else {
+                UpdateLogInfo li = parseUpdateLog(log);
+                pgno = li.pgno;
+            }
+            // 更新最大页号
+            if (pgno > maxPgno) {
+                maxPgno = pgno;
+            }
+        }
+        // 如果没有找到任何日志，设置最大页号为1
+        if (maxPgno == 0) {
+            maxPgno = 1;
+        }
+        // 根据最大页号截断文件，丢弃损坏数据
+        pc.truncateByBgno(maxPgno);
+        return maxPgno;
+    }
     /**
      * 重做所有已完成事务
      * @param tm
