@@ -15,10 +15,17 @@ import top.guoziyang.mydb.backend.vm.VersionManager;
 import top.guoziyang.mydb.backend.vm.VersionManagerImpl;
 import top.guoziyang.mydb.common.Error;
 
+/**
+ * 应用程序启动类
+ */
 public class Launcher {
-
+    /**
+     * 服务的端口
+     */
     public static final int port = 9999;
-
+    /**
+     * 内存大小，默认为64MB
+     */
     public static final long DEFALUT_MEM = (1<<20)*64;
     public static final long KB = 1 << 10;
 	public static final long MB = 1 << 20;
@@ -43,6 +50,10 @@ public class Launcher {
         System.out.println("Usage: launcher (open|create) DBPath");
     }
 
+    /**
+     * 创建数据库
+     * @param path  数据库所在路径
+     */
     private static void createDB(String path) {
         TransactionManager tm = TransactionManager.create(path);
         DataManager dm = DataManager.create(path, DEFALUT_MEM, tm);
@@ -52,6 +63,11 @@ public class Launcher {
         dm.close();
     }
 
+    /**
+     * 打开数据库，监听端口等待指令
+     * @param path  数据库所在路径
+     * @param mem
+     */
     private static void openDB(String path, long mem) {
         TransactionManager tm = TransactionManager.open(path);
         DataManager dm = DataManager.open(path, mem, tm);
@@ -60,6 +76,11 @@ public class Launcher {
         new Server(port, tbm).start();
     }
 
+    /**
+     * 解析内存大小
+     * @param memStr
+     * @return
+     */
     private static long parseMem(String memStr) {
         if(memStr == null || "".equals(memStr)) {
             return DEFALUT_MEM;
