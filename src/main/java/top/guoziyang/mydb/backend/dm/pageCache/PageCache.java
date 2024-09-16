@@ -9,9 +9,12 @@ import top.guoziyang.mydb.backend.dm.page.Page;
 import top.guoziyang.mydb.backend.utils.Panic;
 import top.guoziyang.mydb.common.Error;
 
+/*
+ * 定义了数据页缓存的操作
+ */
 public interface PageCache {
     
-    public static final int PAGE_SIZE = 1 << 13;
+    public static final int PAGE_SIZE = 1 << 13;  // 8192，定义一页的大小为 8KB
 
     int newPage(byte[] initData);
     Page getPage(int pgno) throws Exception;
@@ -22,6 +25,12 @@ public interface PageCache {
     int getPageNumber();
     void flushPage(Page pg);
 
+    /**
+     * 创建数据库时，创建页面缓存对象
+     * @param path
+     * @param memory
+     * @return
+     */
     public static PageCacheImpl create(String path, long memory) {
         File f = new File(path+PageCacheImpl.DB_SUFFIX);
         try {
@@ -46,6 +55,12 @@ public interface PageCache {
         return new PageCacheImpl(raf, fc, (int)memory/PAGE_SIZE);
     }
 
+    /**
+     * 打开数据库时，打开页面缓存对象
+     * @param path
+     * @param memory
+     * @return
+     */
     public static PageCacheImpl open(String path, long memory) {
         File f = new File(path+PageCacheImpl.DB_SUFFIX);
         if(!f.exists()) {
