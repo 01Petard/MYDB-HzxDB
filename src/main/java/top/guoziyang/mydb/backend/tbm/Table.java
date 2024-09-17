@@ -1,6 +1,8 @@
 package top.guoziyang.mydb.backend.tbm;
 
 import com.google.common.primitives.Bytes;
+import top.guoziyang.mydb.backend.dm.page.Page;
+import top.guoziyang.mydb.backend.dm.pageCache.PageCache;
 import top.guoziyang.mydb.backend.parser.statement.*;
 import top.guoziyang.mydb.backend.tbm.Field.ParseValueRes;
 import top.guoziyang.mydb.backend.tm.TransactionManagerImpl;
@@ -301,5 +303,18 @@ public class Table {
     class CalWhereRes {
         long l0, r0, l1, r1;
         boolean single;
+    }
+
+
+    private PageCache pageCache;  // 页面缓存对象
+    private int maxPageNumber;    // 该表的最大页号
+
+
+    public PageCache getPageCache() {
+        return pageCache;
+    }
+
+    public int getMaxPageNumber() {
+        return maxPageNumber;
     }
 }

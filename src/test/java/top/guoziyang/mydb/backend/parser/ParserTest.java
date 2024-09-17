@@ -119,4 +119,26 @@ public class ParserTest {
         System.out.println(gson.toJson(help));
         System.out.println("======================");
     }
+
+    @Test
+    public void testDrop() throws Exception {
+        String stat = "drop table test_table";
+        Object res = Parser.Parse(stat.getBytes());
+        Drop drop = (Drop) res;
+        Gson gson = new Gson();
+        System.out.println("drop table test_table");
+        System.out.println(gson.toJson(drop));
+        System.out.println("======================");
+    }
+
+    @Test
+    public void testDropAll() throws Exception {
+        String stat = "drop all";
+        Object res = Parser.Parse(stat.getBytes());
+        DropAll dropAll = (DropAll) res;
+        Gson gson = new Gson();
+        System.out.println("drop all");
+        System.out.println(gson.toJson(dropAll));
+        System.out.println("======================");
+    }
 }

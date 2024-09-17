@@ -27,7 +27,7 @@ public class Field {
     String fieldType;
     private final Table tb;
     private long index;
-    private BPlusTree bt;
+    BPlusTree bt;
 
     public Field(long uid, Table tb) {
         this.uid = uid;

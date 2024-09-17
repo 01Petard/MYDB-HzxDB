@@ -355,4 +355,67 @@ public class Node {
         long newSon, newKey;
     }
 
+    /**
+     * 从节点中删除指定的键值
+     * @param key 要删除的键值
+     * @return 返回是否成功删除
+     */
+    public boolean remove(long key) throws Exception {
+        dataItem.before();
+        try {
+            boolean result = removeKey(key);
+            if (result && needMerge()) {
+                merge();
+            }
+            return result;
+        } finally {
+            dataItem.after(TransactionManagerImpl.SUPER_XID);
+        }
+    }
+
+    /**
+     * 从节点中删除指定的键值，并重新排列节点
+     * @param key 要删除的键值
+     * @return 返回是否成功删除
+     */
+    private boolean removeKey(long key) {
+        int noKeys = getRawNoKeys(raw);
+        int kth = 0;
+        while (kth < noKeys) {
+            long ik = getRawKthKey(raw, kth);
+            if (ik == key) {
+                break;
+            }
+            kth++;
+        }
+        if (kth == noKeys || getRawKthKey(raw, kth) != key) {
+            return false;
+        }
+
+        if (getRawIfLeaf(raw)) {
+            shiftRawKth(raw, kth);
+            setRawNoKeys(raw, noKeys - 1);
+        } else {
+            shiftRawKth(raw, kth);
+            setRawNoKeys(raw, noKeys - 1);
+        }
+        return true;
+    }
+
+    /**
+     * 判断是否需要合并节点
+     * @return 是否需要合并
+     */
+    private boolean needMerge() {
+        return getRawNoKeys(raw) < BALANCE_NUMBER / 2;
+    }
+
+    /**
+     * 合并当前节点
+     * @throws Exception
+     */
+    private void merge() throws Exception {
+        // Implement the merge logic here
+    }
+
 }

@@ -241,4 +241,36 @@ public class BPlusTree {
     static class InsertRes {
         long newNode, newKey;
     }
+
+    /**
+     * 删除键值
+     * @param key 键值
+     */
+    public void delete(long key) throws Exception {
+        long rootUid = rootUid();
+        delete(rootUid, key);
+    }
+
+    /**
+     * 递归删除键值
+     * @param nodeUid 节点 UID
+     * @param key 键值
+     */
+    private void delete(long nodeUid, long key) throws Exception {
+        Node node = Node.loadNode(this, nodeUid);
+        boolean isLeaf = node.isLeaf();
+        node.release();
+
+        if (isLeaf) {
+            Node leaf = Node.loadNode(this, nodeUid);
+            leaf.remove(key);
+            leaf.release();
+        } else {
+            long next = searchNext(nodeUid, key);
+            delete(next, key);
+            Node internalNode = Node.loadNode(this, nodeUid);
+            internalNode.remove(key);
+            internalNode.release();
+        }
+    }
 }

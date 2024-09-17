@@ -52,6 +52,12 @@ public interface TableManager {
     // 创建一个新的表
     byte[] create(long xid, Create create) throws Exception;
 
+    // 删除一张表
+    byte[] drop(long xid, Drop drop) throws Exception;
+
+    // 删除所有表
+    byte[] dropAll(long xid, DropAll drop) throws Exception;
+
     // 插入新的记录
     byte[] insert(long xid, Insert insert) throws Exception;
 

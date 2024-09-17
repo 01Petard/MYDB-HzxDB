@@ -291,7 +291,12 @@ public class Parser {
         return ("and".equals(op) || "or".equals(op));
     }
 
-    private static Drop parseDrop(Tokenizer tokenizer) throws Exception {
+    private static Object parseDrop(Tokenizer tokenizer) throws Exception {
+        if ("all".equals(tokenizer.peek())) {
+            tokenizer.pop();
+            return new DropAll();
+        }
+
         if (!"table".equals(tokenizer.peek())) {
             throw Error.InvalidCommandException;
         }
@@ -311,6 +316,14 @@ public class Parser {
             throw Error.InvalidCommandException;
         }
         return drop;
+    }
+
+    private static DropAll parseDropAll(Tokenizer tokenizer) throws Exception {
+        tokenizer.pop();
+        if ("all".equals(tokenizer.peek())) {
+            return new DropAll();
+        }
+        throw Error.InvalidCommandException;
     }
 
     private static Create parseCreate(Tokenizer tokenizer) throws Exception {

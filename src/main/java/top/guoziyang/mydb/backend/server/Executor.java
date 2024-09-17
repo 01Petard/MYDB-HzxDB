@@ -92,6 +92,12 @@ public class Executor {
                 res = tbm.showTables(xid);
             } else if (stat instanceof Create) {
                 res = tbm.create(xid, (Create) stat);
+            } else if (stat instanceof Drop) {
+                res = "COMMAND IS UNSUPPORTED".getBytes();
+//                res = tbm.drop(xid, (Drop) stat);
+            } else if (stat instanceof DropAll) {
+                res = "COMMAND IS UNSUPPORTED".getBytes();
+//                res = tbm.dropAll(xid, (DropAll) stat);
             } else if (stat instanceof Select) {
                 res = tbm.read(xid, (Select) stat);
             } else if (stat instanceof Insert) {
