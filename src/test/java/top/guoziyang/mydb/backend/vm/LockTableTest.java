@@ -45,7 +45,7 @@ public class LockTableTest {
                         o.lock();
                         o.unlock();
                     };
-                    new Thread(r).run();
+                    new Thread(r).start();
                 }
             } catch (Exception e) {
                 Panic.panic(e);
@@ -60,7 +60,7 @@ public class LockTableTest {
                         o.lock();
                         o.unlock();
                     };
-                    new Thread(r).run();
+                    new Thread(r).start();
                 }
             } catch (Exception e) {
                 Panic.panic(e);

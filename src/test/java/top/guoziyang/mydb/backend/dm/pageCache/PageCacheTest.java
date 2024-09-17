@@ -54,7 +54,7 @@ public class PageCacheTest {
         for(int i = 0; i < 200; i ++) {
             int id = i;
             Runnable r = () -> worker1(id);
-            new Thread(r).run();
+            new Thread(r).start();
         }
         cdl1.await();
         assert new File("/tmp/pcacher_simple_test1.db").delete();
@@ -109,7 +109,7 @@ public class PageCacheTest {
         for(int i = 0; i < 30; i ++) {
             int id = i;
             Runnable r = () -> worker2(id);
-            new Thread(r).run();
+            new Thread(r).start();
         }
         cdl2.await();
 

@@ -1,14 +1,14 @@
 package top.guoziyang.mydb.backend.common;
 
+import top.guoziyang.mydb.common.Error;
+
 import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import top.guoziyang.mydb.common.Error;
-
 /**
- * AbstractCache 实现了一个引用计数策略的缓存
+ * AbstractCache实现了一个引用计数策略的缓存
  */
 public abstract class AbstractCache<T> {
     private HashMap<Long, T> cache;                     // 实际缓存的数据
@@ -27,11 +27,18 @@ public abstract class AbstractCache<T> {
         lock = new ReentrantLock();
     }
 
+    /**
+     * 获取缓存中的数据
+     * @param key
+     * @return
+     * @throws Exception
+     */
     protected T get(long key) throws Exception {
-        while(true) {
+        while (true) {
             lock.lock();
-            if(getting.containsKey(key)) {
-                // 请求的资源正在被其他线程获取
+
+            // 请求的资源正在被其他线程获取，则等待
+            if (getting.containsKey(key)) {
                 lock.unlock();
                 try {
                     Thread.sleep(1);
@@ -42,8 +49,8 @@ public abstract class AbstractCache<T> {
                 continue;
             }
 
-            if(cache.containsKey(key)) {
-                // 资源在缓存中，直接返回
+            // 资源在缓存中，直接返回
+            if (cache.containsKey(key)) {
                 T obj = cache.get(key);
                 references.put(key, references.get(key) + 1);
                 lock.unlock();
@@ -51,11 +58,11 @@ public abstract class AbstractCache<T> {
             }
 
             // 尝试获取该资源
-            if(maxResource > 0 && count == maxResource) {
+            if (maxResource > 0 && count == maxResource) {
                 lock.unlock();
                 throw Error.CacheFullException;
             }
-            count ++;
+            count++;
             getting.put(key, true);
             lock.unlock();
             break;
@@ -64,9 +71,9 @@ public abstract class AbstractCache<T> {
         T obj = null;
         try {
             obj = getForCache(key);
-        } catch(Exception e) {
+        } catch (Exception e) {
             lock.lock();
-            count --;
+            count--;
             getting.remove(key);
             lock.unlock();
             throw e;
@@ -77,23 +84,23 @@ public abstract class AbstractCache<T> {
         cache.put(key, obj);
         references.put(key, 1);
         lock.unlock();
-        
+
         return obj;
     }
 
     /**
      * 强行释放一个缓存
+     * @param key  键
      */
     protected void release(long key) {
         lock.lock();
         try {
-            int ref = references.get(key)-1;
-            if(ref == 0) {
-                T obj = cache.get(key);
-                releaseForCache(obj);
+            int ref = references.get(key) - 1;
+            if (ref == 0) {
+                releaseForCache(cache.get(key));
                 references.remove(key);
                 cache.remove(key);
-                count --;
+                count--;
             } else {
                 references.put(key, ref);
             }
@@ -110,8 +117,7 @@ public abstract class AbstractCache<T> {
         try {
             Set<Long> keys = cache.keySet();
             for (long key : keys) {
-                T obj = cache.get(key);
-                releaseForCache(obj);
+                releaseForCache(cache.get(key));
                 references.remove(key);
                 cache.remove(key);
             }
@@ -125,6 +131,7 @@ public abstract class AbstractCache<T> {
      * 当资源不在缓存时的获取行为
      */
     protected abstract T getForCache(long key) throws Exception;
+
     /**
      * 当资源被驱逐时的写回行为
      */

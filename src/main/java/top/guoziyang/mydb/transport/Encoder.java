@@ -6,8 +6,14 @@ import com.google.common.primitives.Bytes;
 
 import top.guoziyang.mydb.common.Error;
 
+// 编码器
+/**
+ * 编码器的组成：[Flag][data]
+ * 若 flag 为 0，表示发送的是数据，那么 data 即为这份数据本身；如果 flag 为 1，表示发送的是错误，data 是 Exception.getMessage() 的错误提示信息。
+ */
 public class Encoder {
 
+    // 编码器
     public byte[] encode(Package pkg) {
         if(pkg.getErr() != null) {
             Exception err = pkg.getErr();
@@ -21,6 +27,7 @@ public class Encoder {
         }
     }
 
+    // 解码器
     public Package decode(byte[] data) throws Exception {
         if(data.length < 1) {
             throw Error.InvalidPkgDataException;

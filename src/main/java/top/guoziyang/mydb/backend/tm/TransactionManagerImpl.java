@@ -11,26 +11,35 @@ import top.guoziyang.mydb.backend.utils.Panic;
 import top.guoziyang.mydb.backend.utils.Parser;
 import top.guoziyang.mydb.common.Error;
 
+/**
+ * 事务管理器，负责管理数据库中所有的事务
+ */
 public class TransactionManagerImpl implements TransactionManager {
 
-    // XID文件头长度
+    // 超级事务，xid为0的事务永远为commited状态
+    public static final long SUPER_XID = 0;
+    // XID文件头长度，记录了这个 XID 文件管理的事务的个数
     static final int LEN_XID_HEADER_LENGTH = 8;
+    // 事务文件的后缀
+    static final String XID_SUFFIX = ".xid";
     // 每个事务的占用长度
     private static final int XID_FIELD_SIZE = 1;
-
-    // 事务的三种状态
-    private static final byte FIELD_TRAN_ACTIVE   = 0;
-	private static final byte FIELD_TRAN_COMMITTED = 1;
-	private static final byte FIELD_TRAN_ABORTED  = 2;
-
-    // 超级事务，永远为commited状态
-    public static final long SUPER_XID = 0;
-
-    static final String XID_SUFFIX = ".xid";
-    
+    /**
+     * 事务的三种状态
+     * 0，active，正在进行，尚未结束
+     * 1，committed，已提交
+     * 2，aborted，已撤销（回滚）
+     */
+    // active，正在进行，尚未结束
+    private static final byte FIELD_TRAN_ACTIVE = 0;
+    // 1，committed，已提交
+    private static final byte FIELD_TRAN_COMMITTED = 1;
+    // 2，aborted，已撤销（回滚）
+    private static final byte FIELD_TRAN_ABORTED = 2;
+    // xid的计数
+    private long xidCounter;
     private RandomAccessFile file;
     private FileChannel fc;
-    private long xidCounter;
     private Lock counterLock;
 
     TransactionManagerImpl(RandomAccessFile raf, FileChannel fc) {
@@ -69,12 +78,20 @@ public class TransactionManagerImpl implements TransactionManager {
         }
     }
 
-    // 根据事务xid取得其在xid文件中对应的位置
+    /**
+     * 根据事务xid取得其在xid文件中对应的位置
+     * @param xid
+     * @return
+     */
     private long getXidPosition(long xid) {
         return LEN_XID_HEADER_LENGTH + (xid-1)*XID_FIELD_SIZE;
     }
 
-    // 更新xid事务的状态为status
+    /**
+     * 更新xid事务的状态为status
+     * @param xid
+     * @param status
+     */
     private void updateXID(long xid, byte status) {
         long offset = getXidPosition(xid);
         byte[] tmp = new byte[XID_FIELD_SIZE];
@@ -93,7 +110,9 @@ public class TransactionManagerImpl implements TransactionManager {
         }
     }
 
-    // 将XID加一，并更新XID Header
+    /**
+     * 将XID加一，并更新XID Header
+     */
     private void incrXIDCounter() {
         xidCounter ++;
         ByteBuffer buf = ByteBuffer.wrap(Parser.long2Byte(xidCounter));
@@ -110,7 +129,10 @@ public class TransactionManagerImpl implements TransactionManager {
         }
     }
 
-    // 开始一个事务，并返回XID
+    /**
+     * 开始一个事务，并返回XID
+     * @return
+     */
     public long begin() {
         counterLock.lock();
         try {
@@ -123,17 +145,28 @@ public class TransactionManagerImpl implements TransactionManager {
         }
     }
 
-    // 提交XID事务
+    /**
+     * 提交XID事务
+     * @param xid
+     */
     public void commit(long xid) {
         updateXID(xid, FIELD_TRAN_COMMITTED);
     }
 
-    // 回滚XID事务
+    /**
+     * 回滚XID事务
+     * @param xid
+     */
     public void abort(long xid) {
         updateXID(xid, FIELD_TRAN_ABORTED);
     }
 
-    // 检测XID事务是否处于status状态
+    /**
+     * 检测XID事务是否处于什么状态
+     * @param xid
+     * @param status
+     * @return
+     */
     private boolean checkXID(long xid, byte status) {
         long offset = getXidPosition(xid);
         ByteBuffer buf = ByteBuffer.wrap(new byte[XID_FIELD_SIZE]);

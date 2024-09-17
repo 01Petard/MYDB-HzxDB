@@ -1,14 +1,12 @@
 package top.guoziyang.mydb.transport;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.Socket;
-
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+
+import java.io.*;
+import java.net.Socket;
+
+// 传播器
 
 public class Transporter {
     private Socket socket;
@@ -27,9 +25,14 @@ public class Transporter {
         writer.flush();
     }
 
+    /**
+     * 读取BufferedWriter中的数据，将字节数组转换为16进制字符串
+     * @return
+     * @throws Exception
+     */
     public byte[] receive() throws Exception {
         String line = reader.readLine();
-        if(line == null) {
+        if (line == null) {
             close();
         }
         return hexDecode(line);
@@ -42,7 +45,7 @@ public class Transporter {
     }
 
     private String hexEncode(byte[] buf) {
-        return Hex.encodeHexString(buf, true)+"\n";
+        return Hex.encodeHexString(buf, true) + "\n";
     }
 
     private byte[] hexDecode(String buf) throws DecoderException {

@@ -19,7 +19,12 @@ public interface TransactionManager {
     boolean isAborted(long xid);
     void close();
 
-    public static TransactionManagerImpl create(String path) {
+    /**
+     * 数据库初始化，创建空的事务管理文件
+     * @param path
+     * @return
+     */
+    static TransactionManagerImpl create(String path) {
         File f = new File(path+TransactionManagerImpl.XID_SUFFIX);
         try {
             if(!f.createNewFile()) {
@@ -53,7 +58,12 @@ public interface TransactionManager {
         return new TransactionManagerImpl(raf, fc);
     }
 
-    public static TransactionManagerImpl open(String path) {
+    /**
+     * 打开已有的事务管理文件
+     * @param path
+     * @return
+     */
+    static TransactionManagerImpl open(String path) {
         File f = new File(path+TransactionManagerImpl.XID_SUFFIX);
         if(!f.exists()) {
             Panic.panic(Error.FileNotExistsException);

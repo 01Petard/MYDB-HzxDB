@@ -1,14 +1,15 @@
 package top.guoziyang.mydb.backend.tm;
 
+import org.junit.Test;
+
 import java.io.File;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.junit.Test;
 
 public class TransactionManagerTest {
 
@@ -28,8 +29,8 @@ public class TransactionManagerTest {
         transMap = new ConcurrentHashMap<>();
         cdl = new CountDownLatch(noWorkers);
         for(int i = 0; i < noWorkers; i ++) {
-            Runnable r = () -> worker();
-            new Thread(r).run();
+            Runnable r = this::worker;
+            new Thread(r).start();
         }
         try {
             cdl.await();
@@ -46,7 +47,7 @@ public class TransactionManagerTest {
             int op = Math.abs(random.nextInt(6));
             if(op == 0) {
                 lock.lock();
-                if(inTrans == false) {
+                if (!inTrans) {
                     long xid = tmger.begin();
                     transMap.put(xid, (byte)0);
                     transCnt ++;

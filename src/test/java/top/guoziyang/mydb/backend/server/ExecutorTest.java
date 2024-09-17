@@ -52,15 +52,12 @@ public class ExecutorTest {
         CountDownLatch cdl = new CountDownLatch(noWorkers);
         for(int i = 0; i < noWorkers; i ++) {
             final int no = i;
-            new Thread(new Runnable(){
-                @Override
-                public void run() {
-                    try {
-                        testInsert(new Executor(tbm), w, no);
-                        cdl.countDown();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+            new Thread(() -> {
+                try {
+                    testInsert(new Executor(tbm), w, no);
+                    cdl.countDown();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }).start();
         }

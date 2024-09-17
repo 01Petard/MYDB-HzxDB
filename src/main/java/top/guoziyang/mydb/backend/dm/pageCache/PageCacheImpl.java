@@ -14,6 +14,9 @@ import top.guoziyang.mydb.backend.dm.page.PageImpl;
 import top.guoziyang.mydb.backend.utils.Panic;
 import top.guoziyang.mydb.common.Error;
 
+/**
+ * 实现对数据页的缓存的管理
+ */
 public class PageCacheImpl extends AbstractCache<Page> implements PageCache {
     
     private static final int MEM_MIN_LIM = 10;
@@ -22,7 +25,9 @@ public class PageCacheImpl extends AbstractCache<Page> implements PageCache {
     private RandomAccessFile file;
     private FileChannel fc;
     private Lock fileLock;
-
+    /**
+     * 当前打开的数据页文件页数
+     */
     private AtomicInteger pageNumbers;
 
     PageCacheImpl(RandomAccessFile file, FileChannel fileChannel, int maxResource) {
@@ -54,7 +59,7 @@ public class PageCacheImpl extends AbstractCache<Page> implements PageCache {
     }
 
     /**
-     * 根据pageNumber从数据库文件中读取页数据，并包裹成Page
+     * 将pageNumber从数据库文件中读取的页数据包装成Page
      */
     @Override
     protected Page getForCache(long key) throws Exception {
@@ -73,6 +78,10 @@ public class PageCacheImpl extends AbstractCache<Page> implements PageCache {
         return new PageImpl(pgno, buf.array(), this);
     }
 
+    /**
+     * 驱逐页面。需要根据页面是否是脏页面，来决定是否需要写回文件系统
+     * @param pg
+     */
     @Override
     protected void releaseForCache(Page pg) {
         if(pg.isDirty()) {
@@ -132,7 +141,7 @@ public class PageCacheImpl extends AbstractCache<Page> implements PageCache {
     }
 
     private static long pageOffset(int pgno) {
-        return (pgno-1) * PAGE_SIZE;
+        return (long) (pgno - 1) * PAGE_SIZE;
     }
     
 }
